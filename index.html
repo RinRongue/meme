@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7c7dd">
+  <meta name="description" content="支持中文搜索的 Meme 图片分享站。">
+  <title>Meme Hub | 表情包分享站</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <div class="bg-orb orb-c"></div>
+  <div class="site-shell">
+    <header class="hero">
+      <nav class="topbar" aria-label="主导航">
+        <a class="brand" href="./" aria-label="Meme Hub 首页">
+          <span class="brand-mark">M</span>
+          <span>Meme Hub</span>
+        </a>
+        <span class="top-note">中文搜索 · 静态图库</span>
+      </nav>
+      <section class="hero-panel glass-blob">
+        <div class="hero-copy">
+          <p class="eyebrow">Meme Gallery</p>
+          <h1>表情包仓库</h1>
+          <p class="hero-text">输入文件名里的任意文字，快速筛出想要的 meme。中文、英文和数字都支持。</p>
+        </div>
+        <div class="search-card" role="search">
+          <label for="searchInput">搜索图片名称</label>
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.8 18.1a7.3 7.3 0 1 1 5.16-2.14l4.04 4.04-1.8 1.8-4.04-4.04a7.27 7.27 0 0 1-3.36.34Zm0-2.6a4.7 4.7 0 1 0 0-9.4 4.7 4.7 0 0 0 0 9.4Z"/></svg>
+            <input id="searchInput" type="search" placeholder="搜：截图、猫、1 ..." autocomplete="off" spellcheck="false">
+            <button id="clearSearch" type="button" aria-label="清空搜索">清空</button>
+          </div>
+        </div>
+        <div class="stats" aria-label="图库统计">
+          <div><strong id="totalCount">0</strong><span>总图片</span></div>
+          <div><strong id="visibleCount">0</strong><span>当前显示</span></div>
+        </div>
+      </section>
+    </header>
+    <main>
+      <section class="toolbar glass-blob-alt" aria-live="polite">
+        <div>
+          <h2>全部 Meme</h2>
+          <p id="resultText">正在加载图片清单...</p>
+        </div>
+        <button id="shuffleBtn" type="button">随机排序</button>
+      </section>
+      <section id="gallery" class="gallery" aria-label="Meme 图片列表"></section>
+      <section id="emptyState" class="empty-state glass-blob" hidden>
+        <h2>没有找到匹配的图片</h2>
+        <p>换一个关键词试试，或确认图片文件名里包含你输入的文字。</p>
+      </section>
+    </main>
+  </div>
+  <template id="cardTemplate">
+    <article class="meme-card">
+      <a class="image-link" target="_blank" rel="noreferrer">
+        <img loading="lazy" decoding="async" alt="">
+      </a>
+      <div class="card-body">
+        <h3></h3>
+        <button type="button" class="copy-btn">复制</button>
+      </div>
+    </article>
+  </template>
+  <script src="app.js" defer></script>
+</body>
+</html>
