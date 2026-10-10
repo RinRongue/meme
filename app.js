@@ -30,6 +30,34 @@ function normalizeText(value) {
 function displayName(fileName) { return fileName.replace(/\.[^.]+$/, ""); }
 function encodePath(filePath) { return filePath.split("/").map((segment) => encodeURIComponent(segment)).join("/"); }
 
+async function imageToPng(src) {
+  const response = await fetch(src);
+  if (!response.ok) throw new Error("图片加载失败，请稍后重试。");
+  const blob = await response.blob();
+  if (blob.type === "image/png") return blob;
+
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    const image = new Image();
+    image.src = objectUrl;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("浏览器无法处理图片。");
+    context.drawImage(image, 0, 0);
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob((png) => {
+        if (png) resolve(png);
+        else reject(new Error("图片转换失败，请稍后重试。"));
+      }, "image/png");
+    });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 async function loadImages() {
   const response = await fetch(IMAGE_MANIFEST_URL, { cache: "no-store" });
   if (!response.ok) throw new Error("无法加载图片清单：" + response.status);
@@ -64,14 +92,29 @@ function render() {
     link.href = encodedSrc;
     title.textContent = name;
     title.title = item.name;
+    copy.title = "复制图片（动图会复制为静态图片）";
     copy.addEventListener("click", async () => {
-      const url = new URL(encodedSrc, window.location.href).href;
+      if (copy.disabled) return;
+      if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
+        window.alert("当前浏览器不支持复制图片，请右键图片选择“复制图像”，或打开原图后长按复制。");
+        return;
+      }
+      copy.disabled = true;
+      copy.textContent = "复制中…";
       try {
-        await navigator.clipboard.writeText(url);
+        // Start the clipboard write during the click to preserve user activation.
+        const png = imageToPng(encodedSrc);
+        png.catch(() => {});
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
         copy.textContent = "已复制";
+      } catch (error) {
+        copy.textContent = "复制失败";
+        window.alert(error.name === "NotAllowedError"
+          ? "浏览器未允许复制图片，请允许剪贴板权限，或右键图片选择“复制图像”。"
+          : "复制图片失败，请稍后重试，或右键图片选择“复制图像”。");
+      } finally {
+        copy.disabled = false;
         setTimeout(() => { copy.textContent = "复制"; }, 1200);
-      } catch {
-        window.prompt("复制这个链接：", url);
       }
     });
     fragment.appendChild(node);
