@@ -1,7 +1,8 @@
 const IMAGE_MANIFEST_URL = "meme-manifest.json";
+const PAGE_SIZE = 50;
 const collator = new Intl.Collator("zh-Hans-CN", { numeric: true, sensitivity: "base" });
 
-const state = { all: [], visible: [], query: "" };
+const state = { all: [], visible: [], query: "", page: 1 };
 
 const els = {
   gallery: document.querySelector("#gallery"),
@@ -13,6 +14,10 @@ const els = {
   visibleCount: document.querySelector("#visibleCount"),
   emptyState: document.querySelector("#emptyState"),
   shuffleBtn: document.querySelector("#shuffleBtn"),
+  pagination: document.querySelector("#pagination"),
+  previousPage: document.querySelector("#previousPage"),
+  nextPage: document.querySelector("#nextPage"),
+  pageInfo: document.querySelector("#pageInfo"),
 };
 
 function normalizeText(value) {
@@ -33,14 +38,19 @@ async function loadImages() {
 }
 
 function filterImages() {
+  state.page = 1;
   const needle = normalizeText(state.query);
   state.visible = needle ? state.all.filter((item) => normalizeText(item.name).includes(needle)) : [...state.all];
 }
 
 function render() {
+  const pageCount = Math.max(1, Math.ceil(state.visible.length / PAGE_SIZE));
+  state.page = Math.min(Math.max(1, state.page), pageCount);
+  const start = (state.page - 1) * PAGE_SIZE;
+  const pageImages = state.visible.slice(start, start + PAGE_SIZE);
   els.gallery.innerHTML = "";
   const fragment = document.createDocumentFragment();
-  state.visible.forEach((item, index) => {
+  pageImages.forEach((item, index) => {
     const node = els.template.content.firstElementChild.cloneNode(true);
     const img = node.querySelector("img");
     const link = node.querySelector(".image-link");
@@ -68,13 +78,19 @@ function render() {
   });
   els.gallery.appendChild(fragment);
   els.totalCount.textContent = state.all.length;
-  els.visibleCount.textContent = state.visible.length;
+  els.visibleCount.textContent = pageImages.length;
+  els.pagination.hidden = state.visible.length <= PAGE_SIZE;
+  els.previousPage.disabled = state.page === 1;
+  els.nextPage.disabled = state.page === pageCount;
+  els.pageInfo.textContent = "第 " + state.page + " / " + pageCount + " 页";
   els.emptyState.hidden = state.visible.length !== 0;
   const query = state.query.trim();
   els.resultText.textContent = query ? "“" + query + "” 找到 " + state.visible.length + " 张图片" : "共 " + state.all.length + " 张图片，按文件名排序";
+  if (pageImages.length) els.resultText.textContent += "，当前显示第 " + (start + 1) + "–" + (start + pageImages.length) + " 张";
 }
 
 function shuffleVisible() {
+  state.page = 1;
   for (let i = state.visible.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
     [state.visible[i], state.visible[j]] = [state.visible[j], state.visible[i]];
@@ -83,6 +99,13 @@ function shuffleVisible() {
 }
 
 function bindEvents() {
+  const changePage = (offset) => {
+    state.page += offset;
+    render();
+    els.gallery.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  els.previousPage.addEventListener("click", () => changePage(-1));
+  els.nextPage.addEventListener("click", () => changePage(1));
   els.searchInput.addEventListener("input", (event) => { state.query = event.target.value; filterImages(); render(); });
   els.clearSearch.addEventListener("click", () => { els.searchInput.value = ""; state.query = ""; filterImages(); render(); els.searchInput.focus(); });
   els.shuffleBtn.addEventListener("click", shuffleVisible);

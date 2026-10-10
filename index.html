@@ -50,6 +50,11 @@
         <button id="shuffleBtn" type="button">随机排序</button>
       </section>
       <section id="gallery" class="gallery" aria-label="Meme 图片列表"></section>
+      <nav id="pagination" class="pagination" aria-label="图片分页" hidden>
+        <button id="previousPage" type="button">上一页</button>
+        <span id="pageInfo" aria-live="polite"></span>
+        <button id="nextPage" type="button">下一页</button>
+      </nav>
       <section id="emptyState" class="empty-state glass-blob" hidden>
         <h2>没有找到匹配的图片</h2>
         <p>换一个关键词试试，或确认图片文件名里包含你输入的文字。</p>
